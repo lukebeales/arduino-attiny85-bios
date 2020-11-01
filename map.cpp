@@ -18,6 +18,9 @@ void settings_replace(int offset, int length) {
     int old_map_size = eeprom[0] - 48;  // size of the map partition
     int difference = std::char_traits<char>::length(settings_buffer) - length;
 
+    // std::cout << std::char_traits<char>::length(settings_buffer);
+    // std::cout << '\n';
+
     // if the map is technically empty...
     int old_data_size = 0;  // size of the data partition
     if ( old_map_size == 0 ) {
@@ -71,6 +74,11 @@ bool settings_write() {
   if ( std::char_traits<char>::length(settings_buffer) > 0 ) {
       new_map_data[0] = settings_code;
       new_map_data[1] = std::char_traits<char>::length(settings_buffer) + 48;       // this seems to count correctly now
+
+//////////////////////////////////////////////////////////////////////////
+      new_map_data[2] = '\0';   // THERES SOMETHING WRONG WITH THIS!!!
+////////////////////////////////////////////////////////////////////////////
+
   // otherwise we want to remove the setting right.
   } else {
       new_map_data[0] = '\0';
@@ -177,7 +185,7 @@ bool settings_read() {
   settings_buffer[0] = '\0';
 
   int map_size = eeprom[0] - 48;    // the 48 shift allows us to count starting at the ascii code of 0, so up to 10 settings will seem normal at least
-  int data_offset = 1 + map_size; // where the settings data will sit
+  int data_offset = 1 + map_size;   // where the settings data sits
 
   // go through the map counting up the map_offset & data_offset as we go
   for ( int i = 1; i < map_size; i += 2 ) {
@@ -185,10 +193,11 @@ bool settings_read() {
       // if the current setting 'character' is the one we want, great!
       if ( eeprom[i] == settings_code ) {
      
-        std::cout << "Found it!\n";
+        // std::cout << "Found it!\n";
 
         // set the buffer to the value
         for ( int j = 0; j < eeprom[i + 1] - 48; j++ ) {
+
             settings_buffer[j] = eeprom[data_offset + j];
         }
 
@@ -214,18 +223,29 @@ int main() {
   std::cout << eeprom;
   std::cout << '\n';
 
-/*
+
   settings_code = 'A';
   std::strcpy(settings_buffer, "howdy!");
   settings_write();
 
   std::cout << eeprom;
   std::cout << '\n';
-*/  
+
+//////////////////////////////////////////////////
+// this is to debug the weird space at the end of the map that keeps appearing
+for ( int j = 0; j < 10; j++ ) {
+
+    std::cout << eeprom[j];
+    std::cout << '\n';
+    
+}
+//////////////////////////////////////////////////
+
+/*
   settings_code = 'A';
   settings_read();
 
   std::cout << settings_buffer;
   std::cout << '\n';
-
+*/
 }
