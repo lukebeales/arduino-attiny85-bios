@@ -4,10 +4,52 @@
 
 // so the format is: map_size, map, data
 // with map being two characters for each data block: position, and length.
-char eeprom[] = "6ATB8D8....................................--------++++++++";
+char eeprom[] = "6ATB6D8....................................------++++++++";
 
 char settings_code;
 char settings_buffer[64];
+
+
+
+// i know this wastes clock cycles, but they are free whereas my brain and the chips memory isn't!
+void settings_replace(int offset, int length) {
+
+    int old_map_size = eeprom[0] - 48;  // size of the map partition
+    int difference = std::char_traits<char>::length(settings_buffer) - length;
+
+    // go through the whole map, counting how large the data is
+    // this is so we know how much to shift left by, incase the new value is less than the old value
+    int old_data_size = 0;  // size of the data partition
+    for ( int i = 1; i < old_map_size; i += 2 ) {
+        old_data_size = (eeprom[i] + 1) - 48;
+    }
+   
+    // if the replacement data is BIGGER than the original data
+    if ( difference > 0 ) {
+
+        // shift all data to the right to make room
+        for ( int i = 1 + old_map_size + old_data_size; i > offset + (length - difference); i-- ) {
+            eeprom[i + difference] = eeprom[i];
+        }
+
+    // else if the replacement data is SMALLER than the original data
+    } else if ( difference < 0 ) {
+
+        // shift all data to the left
+        for ( int i = offset + (length + difference); i < 1 + old_map_size + old_data_size; i++ ) {
+            eeprom[i] = eeprom[i - difference];
+        }
+
+    }
+   
+
+    // now write the buffer
+    for ( int i = 0; i < std::char_traits<char>::length(settings_buffer); i++ ) {
+        eeprom[offset + i] = settings_buffer[i];
+    }
+
+}
+
 
 
 // this writes the specific setting to the eeprom, rearranging settings as it goes
@@ -99,8 +141,14 @@ bool settings_write() {
   std::cout << settings_buffer;
   std::cout << "\n";
 
+std::cout << eeprom;
+std::cout << "\n";
+
     // theory is, we can now make a function like substr_replace and feed these in to it for example:
-    // settings_replace(old_data_offset, old_data_length)
+    settings_replace(old_data_offset, old_data_length);
+
+std::cout << eeprom;
+std::cout << "\n";
 
     // std::strcpy(settings_buffer, new_map_data);
     // settings_replace(old_map_offset, old_map_length)
@@ -113,44 +161,6 @@ bool settings_write() {
 }
 
 
-// i know this wastes clock cycles, but they are free whereas my brain and the chips memory isn't!
-void settings_replace(int offset, int length) {
-
-    int old_map_size = eeprom[0] - 48;  // size of the map partition
-    int difference = std::char_traits<char>::length(settings_buffer) - length;
-
-    // go through the whole map, counting how large the data is
-    // this is so we know how much to shift left by, incase the new value is less than the old value
-    int old_data_size = 0;  // size of the data partition
-    for ( int i = 1; i < old_map_size; i += 2 ) {
-        old_data_size = (eeprom[i] + 1) - 48;
-    }
-   
-    // if the replacement data is BIGGER than the original data
-    if ( difference > 0 ) {
-
-        // shift all data to the right to make room
-        for ( int i = 1 + old_map_size + old_data_size; i > offset + (length - difference); i-- ) {
-            eeprom[i + difference] = eeprom[i];
-        }
-
-    // else if the replacement data is SMALLER than the original data
-    } else if ( difference < 0 ) {
-
-        // shift all data to the left
-        for ( int i = offset + (length + difference); i < 1 + old_map_size + old_data_size; i++ ) {
-            eeprom[i] = eeprom[i - difference];
-        }
-
-    }
-   
-
-    // now write the buffer
-    for ( int i = 0; i < std::char_traits<char>::length(settings_buffer); i++ ) {
-        eeprom[offset + i] = settings_buffer[i];
-    }
-
-}
 
 
 
