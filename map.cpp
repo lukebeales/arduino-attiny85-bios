@@ -4,8 +4,8 @@
 
 // so the format is: map_size, map, data
 // with map being two characters for each data block: position, and length.
-// char eeprom[128] = "6BTB6D8....................................------++++++++";
-char eeprom[128] = "0";
+char eeprom[128] = "6BTC6E8....................................------++++++++";
+// char eeprom[128] = "0";
 
 char settings_code;
 char settings_buffer[64];
@@ -18,11 +18,17 @@ void settings_replace(int offset, int length) {
     int old_map_size = eeprom[0] - 48;  // size of the map partition
     int difference = std::char_traits<char>::length(settings_buffer) - length;
 
-    // go through the whole map, counting how large the data is
-    // this is so we know how much to shift left by, incase the new value is less than the old value
+    // if the map is technically empty...
     int old_data_size = 0;  // size of the data partition
-    for ( int i = 1; i < old_map_size; i += 2 ) {
-        old_data_size += (eeprom[i] + 1) - 48;
+    if ( old_map_size == 0 ) {
+        // make the old_data_size whatever is currently stored in there, minus the map size
+        old_data_size = std::char_traits<char>::length(eeprom) - 1;
+    } else {
+        // go through the whole map, counting how large the data is
+        // this is so we know how much to shift left by, incase the new value is less than the old value
+        for ( int i = 1; i < old_map_size; i += 2 ) {
+            old_data_size += (eeprom[i] + 1) - 48;
+        }
     }
    
     // if the replacement data is BIGGER than the original data
@@ -122,11 +128,15 @@ bool settings_write() {
 
   }
 
-  // if we ended up with a new instruction on the end
-  if ( old_map_offset == (1 + old_map_size) ) {
+  // if we ended up with a new instruction on the end, and it's not empty
+  if (
+    ( old_map_offset == (1 + old_map_size) ) &&
+    ( std::char_traits<char>::length(settings_buffer) > 0 )
+  ) {
       new_map_size += 2;
   }
 
+/*
   std::cout << new_map_size;
   std::cout << "\n";
   std::cout << old_map_offset;
@@ -141,6 +151,7 @@ bool settings_write() {
   std::cout << "\n";
   std::cout << settings_buffer;
   std::cout << "\n";
+*/
 
 std::cout << eeprom;
 std::cout << "\n";
@@ -180,7 +191,7 @@ int main() {
 
   settings_code = 'A';
 
-  std::strcpy(settings_buffer, "hi");
+  std::strcpy(settings_buffer, "howdy!");
 
   settings_write();
 
