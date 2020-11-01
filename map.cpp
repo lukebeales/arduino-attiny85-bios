@@ -87,7 +87,7 @@ bool settings_write() {
         // if the current setting 'character' is the one we want, great!
         if ( eeprom[i] == settings_code ) {
      
-            std::cout << "Found it to replace!\n";
+            // std::cout << "Found it to replace!\n";
 
             old_map_offset = i;                          // record where we are in the map
             old_map_length = 2;                         // this is how big the current map entry is
@@ -103,7 +103,7 @@ bool settings_write() {
         // otherwise if the current setting 'character' is after the one we want, then we didn't find it
         } else if ( eeprom[i] > settings_code ) {
 
-            std::cout << "New entry in the middle somewhere!\n";
+            // std::cout << "New entry in the middle somewhere!\n";
 
             old_map_offset = i;
 
@@ -116,7 +116,7 @@ bool settings_write() {
 
         } else {
 
-            std::cout << "Nothing matched, add up some numbers\n";
+            // std::cout << "Nothing matched, add up some numbers\n";
             old_data_offset += (eeprom[i + 1] - 48);  // allows us to use some ascii numbers to start with.
 
         }
@@ -136,44 +136,32 @@ bool settings_write() {
       new_map_size += 2;
   }
 
-/*
-  std::cout << new_map_size;
-  std::cout << "\n";
-  std::cout << old_map_offset;
-  std::cout << "\n";
-  std::cout << old_map_length;
-  std::cout << "\n";
-  std::cout << new_map_data;
-  std::cout << "\n";
-  std::cout << old_data_offset;
-  std::cout << "\n";
-  std::cout << old_data_length;
-  std::cout << "\n";
-  std::cout << settings_buffer;
-  std::cout << "\n";
-*/
-
-std::cout << eeprom;
-std::cout << "\n";
+    /*
+      std::cout << new_map_size;
+      std::cout << "\n";
+      std::cout << old_map_offset;
+      std::cout << "\n";
+      std::cout << old_map_length;
+      std::cout << "\n";
+      std::cout << new_map_data;
+      std::cout << "\n";
+      std::cout << old_data_offset;
+      std::cout << "\n";
+      std::cout << old_data_length;
+      std::cout << "\n";
+      std::cout << settings_buffer;
+      std::cout << "\n";
+    */
 
     // theory is, we can now make a function like substr_replace and feed these in to it for example:
     settings_replace(old_data_offset, old_data_length);
 
-std::cout << eeprom;
-std::cout << "\n";
-
     std::strcpy(settings_buffer, new_map_data);
     settings_replace(old_map_offset, old_map_length);
-
-std::cout << eeprom;
-std::cout << "\n";
 
     settings_buffer[0] = new_map_size + 48;
     settings_buffer[1] = '\0';
     settings_replace(0, 1);
-
-std::cout << eeprom;
-std::cout << "\n";
 
   return true;
  
@@ -182,17 +170,62 @@ std::cout << "\n";
 
 
 
+// reads a specified setting
+bool settings_read() {
+   
+  // reset the buffer just in case
+  settings_buffer[0] = '\0';
+
+  int map_size = eeprom[0] - 48;    // the 48 shift allows us to count starting at the ascii code of 0, so up to 10 settings will seem normal at least
+  int data_offset = 1 + map_size; // where the settings data will sit
+
+  // go through the map counting up the map_offset & data_offset as we go
+  for ( int i = 1; i < map_size; i += 2 ) {
+
+      // if the current setting 'character' is the one we want, great!
+      if ( eeprom[i] == settings_code ) {
+     
+        std::cout << "Found it!\n";
+
+        // set the buffer to the value
+        for ( int j = 0; j < eeprom[i + 1] - 48; j++ ) {
+            settings_buffer[j] = eeprom[data_offset + j];
+        }
+
+        // close the string
+        settings_buffer[(eeprom[i + 1] - 48) + 1] = '\0';
+
+        break;
+
+      }
+
+      data_offset += eeprom[i + 1] - 48;
+  }
+
+  return true;
+ 
+}
+
+
+
 
 int main() {
-  // std::string name;
-  // std::cout << "What is your name? ";
-  // getline (std::cin, name);
-  // std::cout << "Hello, " << name << "!\n";
 
+  std::cout << eeprom;
+  std::cout << '\n';
+
+/*
   settings_code = 'A';
-
   std::strcpy(settings_buffer, "howdy!");
-
   settings_write();
+
+  std::cout << eeprom;
+  std::cout << '\n';
+*/  
+  settings_code = 'A';
+  settings_read();
+
+  std::cout << settings_buffer;
+  std::cout << '\n';
 
 }
