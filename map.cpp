@@ -20,7 +20,7 @@ bool settings_write() {
   char map_data[2];
   if ( sizeof(settings_buffer) > 0 ) {
       map_data[0] = settings_code;
-      map_data[1] = sizeof(settings_buffer) + 48;   // this isn't returning the correct size
+      map_data[1] = std::char_traits<char>::length(settings_buffer) + 48;
   } else {
       map_data[0] = '\0';
   }
@@ -40,7 +40,7 @@ bool settings_write() {
             map_length = 2;
             data_length = (eeprom[i + 1] - 48);
 
-            if ( sizeof(map_data) == 0 ) {
+            if ( std::char_traits<char>::length(map_data) == 0 ) {
                 map_size -= 2;
             }
 
@@ -113,7 +113,7 @@ void settings_replace(int offset, int length) {
 
     int data_size = 0;
     int map_size = eeprom[0] - 48;
-    int difference = sizeof(settings_buffer) - length;
+    int difference = std::char_traits<char>::length(settings_buffer) - length;
 
     // go through the whole map, counting how large the data is
     for ( int i = 1; i < map_size; i += 2 ) {
