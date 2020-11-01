@@ -14,7 +14,7 @@ char settings_buffer[64];
 bool settings_write() {
    
   int old_map_size = eeprom[0] - 48;    // the 48 shift allows us to count starting at the ascii code of 0, so up to 10 settings will seem normal at least
-  int old_map_offeset = 1;                // where in the map the setting will sit
+  int old_map_offset = 1;                // where in the map the setting will sit
   int old_map_length = 0;               // how big the map entry is currently
 
   char new_map_data[2];
