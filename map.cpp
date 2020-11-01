@@ -7,20 +7,22 @@
 char eeprom[] = "6ATB8D8....................................--------++++++++";
 
 char settings_code;
-char settings_buffer[64];   // this is wrong
+char settings_buffer[64];
 
 
 // this writes the specific setting to the eeprom, rearranging settings as it goes
 bool settings_write() {
    
-  int map_size = eeprom[0] - 48;    // this allows us to count starting at the ascii code of 0, so up to 10 settings will seem normal at least
-  int map_start = 1;  // where in the map the setting will sit
-  int map_length = 0;
+  int map_size = eeprom[0] - 48;    // the 48 shift allows us to count starting at the ascii code of 0, so up to 10 settings will seem normal at least
+  int map_start = 1;                // where in the map the setting will sit
+  int map_length = 0;               // how big the map is currently
 
   char map_data[2];
-  if ( sizeof(settings_buffer) > 0 ) {
+  // if there's something to set
+  if ( std::char_traits<char>::length(settings_buffer) > 0 ) {
       map_data[0] = settings_code;
-      map_data[1] = std::char_traits<char>::length(settings_buffer) + 48;
+      map_data[1] = std::char_traits<char>::length(settings_buffer) + 48;       // this seems to count correctly now
+  // otherwise we want to remove the setting right.
   } else {
       map_data[0] = '\0';
   }
@@ -36,12 +38,13 @@ bool settings_write() {
      
             std::cout << "Found it to replace!\n";
 
-            map_start = i;
-            map_length = 2;
-            data_length = (eeprom[i + 1] - 48);
+            map_start = i;                          // record where we are in the map
+            map_length = 2;                         // this is how big the current map entry is
+            data_length = (eeprom[i + 1] - 48);     // this is how much data is currently used by the existing setting
 
+            // if we're looking to replace it with nothing
             if ( std::char_traits<char>::length(map_data) == 0 ) {
-                map_size -= 2;
+                map_size -= 2;  // reduce the map size by 2.
             }
 
             break;
@@ -54,8 +57,9 @@ bool settings_write() {
             map_start = i;
             map_length = 2;
 
-            if ( sizeof(map_data) > 0 ) {
-                map_size += 2;
+            // if there's data to insert...
+            if ( std::char_traits<char>::length(map_data) > 0 ) {
+                map_size += 2;  // increase the map size to accommodate the new data
             }
 
             break;
