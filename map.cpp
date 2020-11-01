@@ -4,7 +4,8 @@
 
 // so the format is: map_size, map, data
 // with map being two characters for each data block: position, and length.
-char eeprom[] = "6ATB6D8....................................------++++++++";
+// char eeprom[128] = "6BTB6D8....................................------++++++++";
+char eeprom[128] = "0";
 
 char settings_code;
 char settings_buffer[64];
@@ -21,7 +22,7 @@ void settings_replace(int offset, int length) {
     // this is so we know how much to shift left by, incase the new value is less than the old value
     int old_data_size = 0;  // size of the data partition
     for ( int i = 1; i < old_map_size; i += 2 ) {
-        old_data_size = (eeprom[i] + 1) - 48;
+        old_data_size += (eeprom[i] + 1) - 48;
     }
    
     // if the replacement data is BIGGER than the original data
@@ -116,7 +117,7 @@ bool settings_write() {
 
     // if we're the last run, it means we're a new instruction on the end.
     if ( i == 1 + (old_map_size - 2) ) {
-        old_map_offset = old_map_size;
+        old_map_offset = 1 + old_map_size;
     }
 
   }
@@ -150,11 +151,18 @@ std::cout << "\n";
 std::cout << eeprom;
 std::cout << "\n";
 
-    // std::strcpy(settings_buffer, new_map_data);
-    // settings_replace(old_map_offset, old_map_length)
+    std::strcpy(settings_buffer, new_map_data);
+    settings_replace(old_map_offset, old_map_length);
 
-    // std::strcpy(settings_buffer, new_map_size);
-    // settings_replace(0, 1)
+std::cout << eeprom;
+std::cout << "\n";
+
+    settings_buffer[0] = new_map_size + 48;
+    settings_buffer[1] = '\0';
+    settings_replace(0, 1);
+
+std::cout << eeprom;
+std::cout << "\n";
 
   return true;
  
@@ -172,7 +180,7 @@ int main() {
 
   settings_code = 'A';
 
-  std::strcpy(settings_buffer, "hello");
+  std::strcpy(settings_buffer, "hi");
 
   settings_write();
 
