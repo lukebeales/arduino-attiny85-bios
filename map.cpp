@@ -69,21 +69,6 @@ bool settings_write() {
   int old_map_offset = 1;                // where in the map the setting will sit
   int old_map_length = 0;               // how big the map entry is currently
 
-  char new_map_data[2];
-  // if there's something to set
-  if ( std::char_traits<char>::length(settings_buffer) > 0 ) {
-      new_map_data[0] = settings_code;
-      new_map_data[1] = std::char_traits<char>::length(settings_buffer) + 48;       // this seems to count correctly now
-
-//////////////////////////////////////////////////////////////////////////
-      new_map_data[2] = '\0';   // THERES SOMETHING WRONG WITH THIS!!!
-////////////////////////////////////////////////////////////////////////////
-
-  // otherwise we want to remove the setting right.
-  } else {
-      new_map_data[0] = '\0';
-  }
-
   int old_data_offset = 1 + old_map_size; // where the settings data will sit
   int old_data_length = 0;
 
@@ -102,7 +87,7 @@ bool settings_write() {
             old_data_length = (eeprom[i + 1] - 48);     // this is how much data is currently used by the existing setting
 
             // if we're looking to replace it with nothing
-            if ( std::char_traits<char>::length(new_map_data) == 0 ) {
+            if ( std::char_traits<char>::length(settings_buffer) == 0 ) {
                 new_map_size -= 2;  // reduce the map size by 2.
             }
 
@@ -116,7 +101,7 @@ bool settings_write() {
             old_map_offset = i;
 
             // if there's data to insert...
-            if ( std::char_traits<char>::length(new_map_data) > 0 ) {
+            if ( std::char_traits<char>::length(settings_buffer) > 0 ) {
                 new_map_size += 2;  // increase the map size to accommodate the new data
             }
 
@@ -164,8 +149,18 @@ bool settings_write() {
     // theory is, we can now make a function like substr_replace and feed these in to it for example:
     settings_replace(old_data_offset, old_data_length);
 
-    std::strcpy(settings_buffer, new_map_data);
+
+    // if there's a map that needs to happen
+    if ( std::char_traits<char>::length(settings_buffer) > 0 ) {
+      settings_buffer[1] = std::char_traits<char>::length(settings_buffer) + 48;    // this has to happen first.
+      settings_buffer[0] = settings_code;
+      settings_buffer[2] = '\0';
+    // otherwise we want to remove the setting right.
+    } else {
+      settings_buffer[0] = '\0';
+    }
     settings_replace(old_map_offset, old_map_length);
+
 
     settings_buffer[0] = new_map_size + 48;
     settings_buffer[1] = '\0';
@@ -223,6 +218,11 @@ int main() {
   std::cout << eeprom;
   std::cout << '\n';
 
+  settings_code = 'C';
+  settings_read();
+
+  std::cout << settings_buffer;
+  std::cout << '\n';
 
   settings_code = 'A';
   std::strcpy(settings_buffer, "howdy!");
@@ -231,21 +231,10 @@ int main() {
   std::cout << eeprom;
   std::cout << '\n';
 
-//////////////////////////////////////////////////
-// this is to debug the weird space at the end of the map that keeps appearing
-for ( int j = 0; j < 10; j++ ) {
-
-    std::cout << eeprom[j];
-    std::cout << '\n';
-    
-}
-//////////////////////////////////////////////////
-
-/*
-  settings_code = 'A';
+  settings_code = 'B';
   settings_read();
 
   std::cout << settings_buffer;
   std::cout << '\n';
-*/
+    
 }
