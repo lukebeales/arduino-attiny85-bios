@@ -57,7 +57,6 @@ bool settings_write() {
             std::cout << "New entry in the middle somewhere!\n";
 
             old_map_offset = i;
-            old_map_length = 2;
 
             // if there's data to insert...
             if ( std::char_traits<char>::length(new_map_data) > 0 ) {
@@ -101,13 +100,13 @@ bool settings_write() {
   std::cout << "\n";
 
     // theory is, we can now make a function like substr_replace and feed these in to it for example:
-    // settings_replace(data_start, data_length);
+    // settings_replace(old_data_offset, old_data_length, settings_buffer)
 
-    // std::strcpy(settings_buffer, map_data);
-    // settings_replace(map_start, map_length);
+    // std::strcpy(settings_buffer, new_map_data);
+    // settings_replace(old_map_offset, old_map_length, settings_buffer)
 
-    // std::strcpy(settings_buffer, map_size);
-    // settings_replace(0, 1, map_size)
+    // std::strcpy(settings_buffer, new_map_size);
+    // settings_replace(0, 1, settings_buffer)
 
   return true;
  
@@ -154,7 +153,7 @@ int main() {
   // getline (std::cin, name);
   // std::cout << "Hello, " << name << "!\n";
 
-  settings_code = 'A';
+  settings_code = 'C';
 
   std::strcpy(settings_buffer, "hello");
 
