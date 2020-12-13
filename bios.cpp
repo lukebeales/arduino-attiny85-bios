@@ -129,23 +129,6 @@ bool bios_write() {
       new_map_size += 2;
   }
 
-    /*
-      std::cout << new_map_size;
-      std::cout << "\n";
-      std::cout << old_map_offset;
-      std::cout << "\n";
-      std::cout << old_map_length;
-      std::cout << "\n";
-      std::cout << new_map_data;
-      std::cout << "\n";
-      std::cout << old_data_offset;
-      std::cout << "\n";
-      std::cout << old_data_length;
-      std::cout << "\n";
-      std::cout << bios_buffer;
-      std::cout << "\n";
-    */
-
     // theory is, we can now make a function like substr_replace and feed these in to it for example:
     bios_replace(old_data_offset, old_data_length);
 
@@ -211,6 +194,63 @@ bool bios_read() {
 }
 
 
+// this sets the first bit as ascii 0.
+bool bios_reset() {
+
+    eeprom[0] = 0 + 48;
+
+}
+
+
+// so what this does is it reads the map size
+// goes through the map adding up how much data there is
+// then goes through the memory one by one
+// if it finds a \0 at any point prior to the total then it's corrupt
+// if corrupt, reset it
+bool bios_verify() {
+
+  // if the memory looks clean already
+  if ( eeprom[0] == '\0' ) {
+      bios_reset();
+  } else {
+
+      int map_size = eeprom[0] - 48;    // the 48 shift allows us to count starting at the ascii code of 0, so up to 10 settings will seem normal at least
+      int data_size = 0;
+    
+      // go through the map counting up the map_offset & data_offset as we go
+      for ( int i = 1; i < map_size; i += 2 ) {
+        
+            // if the eeprom entry is null
+            if ( ( eeprom[i] == '\0' ) || ( eeprom[i + 1] == '\0' ) ) {
+    
+                i = map_size;
+                data_size = 0;
+                bios_reset();
+
+            } else {
+                data_size += eeprom[i + 1] - 48;  // add to the data size
+            }
+      }
+
+      if ( data_size > 0 ) {
+
+        // go through the data to see if there's any \0's within it
+        for ( int i = 1 + map_size; i < 1 + map_size + data_size; i ++ ) {
+        
+            if ( eeprom[i] == '\0' ) {
+    
+                i = 1 + map_size + data_size;
+                bios_reset();
+
+            }
+            
+        }
+          
+      }
+
+  }  
+    
+}
 
 
 int main() {
