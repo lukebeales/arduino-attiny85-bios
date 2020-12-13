@@ -62,14 +62,14 @@ void bios_replace(int offset, int length) {
 
 
 
-// this writes the specific bios to the eeprom, rearranging bios as it goes
+// this writes the specific setting to the eeprom, rearranging bios as it goes
 bool bios_write() {
    
   int old_map_size = eeprom[0] - 48;    // the 48 shift allows us to count starting at the ascii code of 0, so up to 10 bios will seem normal at least
-  int old_map_offset = 1;                // where in the map the bios will sit
+  int old_map_offset = 1;                // where in the map the setting will sit
   int old_map_length = 0;               // how big the map entry is currently
 
-  int old_data_offset = 1 + old_map_size; // where the bios data will sit
+  int old_data_offset = 1 + old_map_size; // where the setting data will sit
   int old_data_length = 0;
 
   int new_map_size = 0 + old_map_size;
@@ -77,14 +77,14 @@ bool bios_write() {
   // go through the map counting up the map_offset & data_offset as we go
   for ( int i = 1; i < old_map_size; i += 2 ) {
 
-        // if the current bios 'character' is the one we want, great!
+        // if the current setting 'character' is the one we want, great!
         if ( eeprom[i] == bios_code ) {
      
             // std::cout << "Found it to replace!\n";
 
             old_map_offset = i;                          // record where we are in the map
             old_map_length = 2;                         // this is how big the current map entry is
-            old_data_length = (eeprom[i + 1] - 48);     // this is how much data is currently used by the existing bios
+            old_data_length = (eeprom[i + 1] - 48);     // this is how much data is currently used by the existing setting
 
             // if we're looking to replace it with nothing
             if ( std::char_traits<char>::length(bios_buffer) == 0 ) {
@@ -93,7 +93,7 @@ bool bios_write() {
 
             break;
 
-        // otherwise if the current bios 'character' is after the one we want, then we didn't find it
+        // otherwise if the current setting 'character' is after the one we want, then we didn't find it
         } else if ( eeprom[i] > bios_code ) {
 
             // std::cout << "New entry in the middle somewhere!\n";
@@ -155,7 +155,7 @@ bool bios_write() {
       bios_buffer[1] = std::char_traits<char>::length(bios_buffer) + 48;    // this has to happen first.
       bios_buffer[0] = bios_code;
       bios_buffer[2] = '\0';
-    // otherwise we want to remove the bios right.
+    // otherwise we want to remove the setting right.
     } else {
       bios_buffer[0] = '\0';
     }
@@ -173,19 +173,19 @@ bool bios_write() {
 
 
 
-// reads a specified bios
+// reads a specified setting
 bool bios_read() {
    
   // reset the buffer just in case
   bios_buffer[0] = '\0';
 
-  int map_size = eeprom[0] - 48;    // the 48 shift allows us to count starting at the ascii code of 0, so up to 10 bios will seem normal at least
-  int data_offset = 1 + map_size;   // where the bios data sits
+  int map_size = eeprom[0] - 48;    // the 48 shift allows us to count starting at the ascii code of 0, so up to 10 settings will seem normal at least
+  int data_offset = 1 + map_size;   // where the setting data sits
 
   // go through the map counting up the map_offset & data_offset as we go
   for ( int i = 1; i < map_size; i += 2 ) {
 
-      // if the current bios 'character' is the one we want, great!
+      // if the current setting 'character' is the one we want, great!
       if ( eeprom[i] == bios_code ) {
      
         // std::cout << "Found it!\n";
