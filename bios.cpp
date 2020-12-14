@@ -180,7 +180,7 @@ bool bios_read() {
         }
 
         // close the string
-        bios_buffer[(eeprom[i + 1] - 48) + 1] = '\0';
+        bios_buffer[(eeprom[i + 1] - 48)] = '\0';
 
         break;
 
@@ -198,6 +198,7 @@ bool bios_read() {
 bool bios_reset() {
 
     eeprom[0] = 0 + 48;
+    eeprom[1] = '\0';
 
 }
 
@@ -253,7 +254,38 @@ bool bios_verify() {
 }
 
 
-int main() {
+// reads and prints all the settings.
+bool bios_read_all() {
+
+  int map_size = eeprom[0] - 48;    // the 48 shift allows us to count starting at the ascii code of 0, so up to 10 settings will seem normal at least
+
+  // go through the map counting up the map_offset & data_offset as we go
+  for ( int i = 1; i < map_size; i += 2 ) {
+    
+    bios_code = eeprom[i];
+    bios_read();
+
+    std::cout << bios_code;
+    std::cout << ": ";          // single quotes are for a single character, double for a string
+    std::cout << bios_buffer;
+    std::cout << '\n';
+    
+  }
+
+}
+
+
+bool bios_init() {
+
+  std::cout << "= Bios ========================";
+  std::cout << '\n';
+  std::cout << '\n';
+
+  bios_verify();
+  bios_read_all();
+
+  std::cout << '\n';
+  std::cout << '\n';
 
   std::cout << eeprom;
   std::cout << '\n';
@@ -276,5 +308,12 @@ int main() {
 
   std::cout << bios_buffer;
   std::cout << '\n';
-   
+    
+}
+
+
+int main() {
+
+    bios_init();
+
 }
