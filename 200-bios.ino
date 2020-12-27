@@ -11,6 +11,11 @@
 
 #include <EEPROM.h>
 
+// 0 = menu
+// 1 = key received, now waiting for the value
+// 2 = value received
+byte bios_state = 0;
+
 char bios_code;
 char bios_buffer[64];
 
@@ -289,8 +294,13 @@ bool bios_verify() {
 
 
 // reads and prints all the settings.
-bool bios_read_all() {
+bool bios_menu() {
 
+  serial.println("");
+  serial.println(F("= Bios ========================"));
+  serial.println("");
+  
+  
   int map_size = (int)EEPROM.read(0) - 48;    // the 48 shift allows us to count starting at the ascii code of 0, so up to 10 settings will seem normal at least
 
   // go through the map counting up the map_offset & data_offset as we go
@@ -305,6 +315,9 @@ bool bios_read_all() {
     
   }
 
+  serial.println(F(""));
+  serial.print(F("Set: "));
+
 }
 
 
@@ -312,17 +325,13 @@ bool bios_init() {
 
   serial_start();
 
-  serial.println(F("= Bios ========================"));
-  serial.println("");
-  
+  // lets do a sanity check here...
   bios_verify();
-  bios_read_all();
 
-  serial.println(F("==============================="));
-  serial.print(F("Type a setting to change: "));
+  bios_menu();
 
   // give the user a rolling 5 seconds to change it
-  unsigned int expires = round(millis() / 1000) + 5;
+  unsigned int expires = round(millis() / 1000) + 10;
   while (
     ( expires == 0 ) ||
     ( round(millis() / 1000) < expires )
@@ -332,13 +341,53 @@ bool bios_init() {
 
     if ( serial_read() ) {
 
-      serial.print(F("buffer: "));
-      serial.println(serial_buffer);
+      // if we're on the menu
+      if ( bios_state == 0 ) {
 
-      // if something is received on the serial, recalculate the expires value
-      // expires = 0;
-      expires = round(millis() / 1000) + 10;
+        if ( strlen(serial_buffer) > 0 ) {
 
+          // cancel the timeout
+          expires = 0;
+
+          // record the 'bios_code' as the first character of the serial buffer
+          bios_code = serial_buffer[0];
+        
+          serial.println("");
+          serial.print(F("Set "));
+          serial.print(bios_code);
+          serial.print(F(" to: "));
+  
+          // now wait for the value
+          bios_state = 1;
+
+        }
+        
+      } else if ( bios_state == 1 ) {
+
+        // copy serial_buffer to bios_buffer
+        strcpy(bios_buffer, serial_buffer);
+        
+        serial.println("");
+        serial.print(F("setting "));
+        serial.print(bios_code);
+        serial.print(F(" to "));
+        serial.print(bios_buffer);
+        serial.println(F("..."));
+      
+        bios_write();
+
+        // now show everything again
+        bios_menu();
+                
+        // go back to waiting for a command
+        bios_state = 0;
+
+        // if something is received on the serial, recalculate the expires value
+        // expires = 0;
+        expires = round(millis() / 1000) + 10;
+  
+      }
+      
     }
    
   }

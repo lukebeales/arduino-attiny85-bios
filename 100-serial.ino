@@ -32,6 +32,7 @@ boolean serial_read() {
 
     byte limit = 100;
     byte i = 0;
+    boolean received = false;
 
     while (
       ( i < limit )
@@ -39,6 +40,9 @@ boolean serial_read() {
 
       // if there's a byte waiting in the buffer for us
       if ( serial.available() > 0 ) {
+
+        // let us know something has been received
+        received = true;
 
         // read the data...
         byte serial_buffer_byte = serial.read();
@@ -76,8 +80,8 @@ boolean serial_read() {
 
     }
     
-    // if the length of the buffer is > 0 then return true
-    if ( serial_buffer_read > 0 ) {
+    // if we received anything...even if it's just a newline
+    if ( received == true ) {
       return true;
     }
 
