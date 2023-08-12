@@ -1,6 +1,7 @@
 # arduino-attiny85-bios
 A low memory bios/settings technique for the attiny85 chip in arduino
 
+```
               +-----+
  reset  5 ----|     |---- VCC
     TX  3 ----|     |---- 2/A1  interrupt
@@ -27,3 +28,4 @@ A low memory bios/settings technique for the attiny85 chip in arduino
   + = time on
   - = time off
   ! = enable interrupt (disabling this saves power)
+```
