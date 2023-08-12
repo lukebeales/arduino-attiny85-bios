@@ -1,6 +1,8 @@
 # arduino-attiny85-bios
 A low memory bios/settings technique for the attiny85 chip in arduino
 
+Contains automatic defrag, memory mapping, low power idle states, low power power dual mode status led.
+
 ```
               +-----+
  reset  5 ----|     |---- VCC
